@@ -15,7 +15,7 @@ Features include adding tasks and deleting tasks — a clean minimal starting po
 - Tailwind CSS  
 
 ## 🌐 Live Demo
-[View on Netlify]()  
+[View on Netlify](https://task-manager-react-vite.netlify.app/)  
 
 ## 📦 Setup
 1. Clone the repo:
