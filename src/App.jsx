@@ -7,7 +7,7 @@ function App() {
   const [tasks, setTasks] = useState([])
 
   const addTasks = () => {
-    if (!task.trim() !== "") return;
+    if (task.trim() === "") return;
 
     setTasks([...tasks, task])
     setTask("")
