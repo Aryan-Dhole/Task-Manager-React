@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { FaThumbtack } from "react-icons/fa";
 import './App.css'
 
 function App() {
@@ -8,6 +9,10 @@ function App() {
     const saved = localStorage.getItem("tasks");
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+
 
 
   // Add Task 
@@ -25,6 +30,14 @@ function App() {
     setTasks(prev => [...prev, newTask])
     setTask("")
   }
+
+  // Toggle pin/unpin
+  const togglePin = (id) => {
+    setTasks(prev =>
+      prev.map(t => t.id === id ? { ...t, pinned: !t.pinned } : t)
+    );
+  };
+
 
   // Delete by id
   const deleteTask = (id) => {
@@ -45,6 +58,27 @@ function App() {
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
+
+  // Start editing a task
+  const startEdit = (id, text) => {
+    setEditingId(id);
+    setEditingText(text);
+  };
+
+  // Save edited text
+  const saveEdit = (id) => {
+    setTasks(prev =>
+      prev.map(t => t.id === id ? { ...t, text: editingText } : t)
+    );
+    setEditingId(null);
+    setEditingText("");
+  };
+
+  // Cancel edit
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText("");
+  };
 
 
   return (
@@ -70,41 +104,84 @@ function App() {
         </div>
 
         {/* Task List */}
-        <div className="space-y-3">
+        <div className="space-y-3 w-120">
           {tasks.length > 0 ? (
-            tasks.map((t) => (
-              <div
-                key={t.id}
-                className="flex justify-between items-center bg-gray-800 p-3 rounded-lg"
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  {/* Done toggle button */}
+            [...tasks]
+              .sort((a, b) => (b.pinned === a.pinned ? 0 : b.pinned ? 1 : -1))
+              .map((t) => (
+                <div key={t.id} className="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
+                  <div className="flex items-center gap-3 flex-1">
+                    {/* Done toggle button */}
+                    <button
+                      onClick={() => toggleDone(t.id)}
+                      className={`w-6 h-6 rounded-full flex items-center justify-center transition ${t.done ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
+                        }`}
+                      title={t.done ? "Mark as undone" : "Mark as done"}
+                    >
+                      {t.done ? '✓' : ''}
+                    </button>
+
+                    {/* Either editing input or normal text */}
+                    {editingId === t.id ? (
+                      <div className="flex gap-2 flex-1">
+                        <input
+                          type="text"
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          className="flex-1 px-2 py-1 rounded bg-gray-700 text-white outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => saveEdit(t.id)}
+                          className="bg-green-600 px-2 rounded"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="bg-gray-600 px-2 rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <span
+                        onClick={() => toggleDone(t.id)}
+                        className={`break-words cursor-pointer ${t.done ? 'line-through opacity-60' : ''}`}
+                      >
+                        {t.text}
+                      </span>
+                    )}
+                  </div>
                   <button
-                    onClick={() => toggleDone(t.id)}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center transition ${t.done ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
-                    title={t.done ? "Mark as undone" : "Mark as done"}
+                    onClick={() => togglePin(t.id)}
+                    className={`ml-3 text-xl ${t.pinned ? 'text-violet-600 hover:text-violet-800' : 'text-gray-400 hover:text-gray-600'}`}
+                    title={t.pinned ? "Unpin" : "Pin"}
                   >
-                    {t.done ? '✓' : ''}
+                    <FaThumbtack className={t.pinned ? '' : 'opacity-50'} />
                   </button>
 
-                  {/* Task text (clicking the text also toggles done) */}
-                  <span
-                    onClick={() => toggleDone(t.id)}
-                    className={`break-words cursor-pointer ${t.done ? 'line-through opacity-60' : ''}`}
+
+
+
+                  {/* Edit + Delete buttons */}
+                  {editingId !== t.id && (
+                    <button
+                      onClick={() => startEdit(t.id, t.text)}
+                      className="text-yellow-400 hover:text-yellow-600 ml-3"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={() => deleteTask(t.id)}
+                    className="text-red-400 hover:text-red-600 ml-3"
                   >
-                    {t.text}
-                  </span>
+                    Delete
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => deleteTask(t.id)}
-                  className="text-red-400 hover:text-red-600 ml-3"
-                >
-                  Delete
-                </button>
-              </div>
-            ))
+              ))
           ) : (
             <p className="text-gray-400 text-center">No tasks yet. Add one!</p>
           )}
